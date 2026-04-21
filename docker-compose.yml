@@ -1,0 +1,41 @@
+
+services:
+
+  postgres:
+    container_name: postgres_db_etl
+    image: postgres:16
+    restart: unless-stopped
+    env_file:
+      - postgres_to_es/.env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database_dump.sql:/docker-entrypoint-initdb.d/init.sql
+
+
+  elasticsearch:
+    image: elasticsearch:8.11.0
+    container_name: es
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+
+  etl:
+    build:
+      context: .
+      dockerfile: postgres_to_es/Dockerfile
+    container_name: etl
+    depends_on:
+      - postgres
+      - elasticsearch
+    env_file:
+      - postgres_to_es/.env
+    restart: always
+
+volumes:
+  postgres_data:
+  es_data:

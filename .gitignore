@@ -1,0 +1,5 @@
+.DS_Store
+.idea
+
+venv
+postgres_to_es/.env
